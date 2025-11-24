@@ -8,49 +8,69 @@ from streamlit_agraph import agraph, Node, Edge, Config
 SCALE = 200 
 
 TESTCASES = {
-    "Testcase 1: Hexagon/Grid (DFS/BFS)": {
-        "nodes": ["a", "b", "c", "d", "e", "f", "g"],
-        "edges": [
-            ("a", "b", 1), ("a", "f", 1),
-            ("b", "c", 1), ("b", "g", 1),
-            ("c", "d", 1), ("c", "g", 1),
-            ("d", "e", 1),
-            ("e", "f", 1), ("e", "g", 1),
-            ("f", "g", 1)
-        ],
-        "pos": {
-            "a": (-2*SCALE, 0), "b": (-1*SCALE, -1*SCALE), "f": (-1*SCALE, 1*SCALE),
-            "g": (0, 0),
-            "c": (1*SCALE, -1*SCALE), "e": (1*SCALE, 1*SCALE), "d": (2*SCALE, 0)
-        }
-    },
-    "Testcase 2: Pentagon (Complete Graph)": {
+    # ----------------------------------------------------
+    #(Dijkstra's Shortest Path)
+    # ----------------------------------------------------
+    "Image Case 1: Start a to e": {
         "nodes": ["a", "b", "c", "d", "e"],
         "edges": [
-            ("a", "b", 1), ("a", "c", 1), ("a", "d", 1), ("a", "e", 1),
-            ("b", "c", 1), ("b", "d", 1), ("b", "e", 1),
-            ("c", "d", 1), ("c", "e", 1),
-            ("d", "e", 1)
+            ("a", "b", 4), ("a", "c", 2),
+            ("b", "c", 1), ("b", "d", 5),
+            ("c", "d", 8), ("c", "e", 10),
+            ("d", "e", 2)
         ],
         "pos": {
-            "a": (0, -2*SCALE), "b": (1.9*SCALE, -0.6*SCALE), "c": (1.2*SCALE, 1.5*SCALE),
-            "d": (-1.2*SCALE, 1.5*SCALE), "e": (-1.9*SCALE, -0.6*SCALE)
+            "a": (-2*SCALE, 0),
+            "b": (0, 1*SCALE), "c": (0, -1*SCALE),
+            "d": (2*SCALE, 1*SCALE), "e": (2*SCALE, -1*SCALE)
         }
     },
-    "Testcase 3: Composite (Square + Rect)": {
-        "nodes": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"],
+    "Image Case 2: Start a to d": {
+        "nodes": ["a", "b", "c", "d", "e"],
         "edges": [
-            ("a", "b", 1), ("b", "c", 1), ("c", "d", 1), ("d", "a", 1), ("b", "d", 1), 
-            ("c", "e", 1), ("c", "g", 1), ("e", "f", 1), ("f", "g", 1), ("e", "g", 1), 
-            ("g", "j", 1), ("j", "i", 1), ("i", "h", 1), ("h", "g", 1), 
-            ("g", "k", 1), ("j", "k", 1), ("i", "k", 1), ("h", "k", 1)  
+            # ข้อมูล Edges เดิมที่ถูกต้องแล้ว
+            ("a", "b", 6), ("a", "c", 7), ("a", "e", 5),
+            ("b", "c", 2),
+            ("c", "e", 1), ("c", "d", 3),
+            ("e", "d", 2)
         ],
         "pos": {
-            "a": (-3*SCALE, -1*SCALE), "b": (-1*SCALE, -1*SCALE), 
-            "d": (-3*SCALE, 1*SCALE), "c": (-1*SCALE, 1*SCALE),
-            "e": (-1*SCALE, 3*SCALE), "f": (1*SCALE, 3*SCALE), "g": (1*SCALE, 1*SCALE),
-            "j": (1*SCALE, -1*SCALE), "i": (3*SCALE, -1*SCALE), "h": (3*SCALE, 1*SCALE),
-            "k": (2*SCALE, 0)
+            # b: ยอดพีระมิด (บนสุด -> Y ติดลบ)
+            "b": (0, -2.5*SCALE),         
+            
+            # a: กลางซ้าย (ระดับสายตา)
+            "a": (-2.5*SCALE, 0),         
+            
+            # c: กลางขวา (ระดับเดียวกับ a)
+            "c": (2.5*SCALE, 0),          
+            
+            # e: ล่างซ้าย (Y เป็นบวก -> ลงล่าง)
+            "e": (-1.5*SCALE, 2.5*SCALE),  
+            
+            # d: ล่างขวา (ระดับเดียวกับ e)
+            "d": (1.5*SCALE, 2.5*SCALE)    
+        }
+    },
+    "Image Case 3: Start a to f": {
+        "nodes": ["a", "b", "c", "d", "e", "f"],
+        "edges": [
+            ("a", "b", 10), ("a", "c", 5),
+            ("b", "c", 3), ("b", "d", 2),
+            ("c", "e", 9),
+            ("d", "e", 4), ("d", "f", 6),
+            ("e", "f", 7)
+        ],
+        "pos": {
+            "a": (-3*SCALE, 0),           # a: ซ้ายสุด (กลาง)
+            
+            # --- แก้ใหม่: ใช้ค่าลบเพื่อให้ขึ้นข้างบน ---
+            "b": (-1*SCALE, -2*SCALE),    # b: บนซ้าย (ค่า Y ติดลบ = ขึ้นบน)
+            "c": (-1*SCALE, 2*SCALE),     # c: ล่างซ้าย (ค่า Y บวก = ลงล่าง)
+            
+            "d": (1*SCALE, -0.5*SCALE),   # d: กลางค่อนบน (ระดับเดียวกับ f)
+            
+            "f": (3*SCALE, -0.5*SCALE),   # f: ขวาบน (ระดับเดียวกับ d)
+            "e": (3*SCALE, 2*SCALE)       # e: ขวาล่าง (ระดับเดียวกับ c)
         }
     },
     "Testcase 4: Weighted Shortest Path": {
@@ -58,7 +78,7 @@ TESTCASES = {
         "edges": [
             ("S", "A", 2), ("S", "B", 5), ("S", "C", 3),
             ("A", "B", 2), ("A", "D", 6),
-            ("B", "D", 3), ("B", "E", 3), ("B", "C", 2), ("B", "F", 6),
+            ("B", "D", 3), ("B", "C", 2), ("B", "F", 6),
             ("C", "F", 7),
             ("D", "E", 3), ("D", "T", 6),
             ("E", "F", 3), ("E", "T", 2),
