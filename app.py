@@ -2,6 +2,7 @@ import streamlit as st
 import networkx as nx
 import pandas as pd
 from streamlit_agraph import agraph, Node, Edge, Config
+import heapq  # Imported at top level for better practice
 
 # --------------------------
 # 1. Testcase Definitions
@@ -92,7 +93,8 @@ class GraphAlgorithms:
                 if v not in visited:
                     steps.append(("edge", (u, v), f"Explore Edge {u}-{v}"))
                     dfs(v)
-        dfs(start_node)
+        if start_node:
+            dfs(start_node)
         return steps
 
     def get_bfs_steps(self, start_node):
@@ -114,14 +116,12 @@ class GraphAlgorithms:
 
     def get_dijkstra_steps(self, start, end):
         # Dijkstra implementation that logs steps for visualization
-        # Returns list of steps: (type, value, description, current_distances_dict)
-        import heapq
-        
         steps = []
         pq = [(0, start)]
         distances = {node: float('inf') for node in self.G.nodes()}
         distances[start] = 0
         visited = set()
+        prev = {node: None for node in self.G.nodes()}
         
         steps.append(("node", start, f"Start at {start}, Dist: 0", distances.copy()))
         
@@ -143,23 +143,55 @@ class GraphAlgorithms:
                 
                 if distances[u] + weight < distances[v]:
                     distances[v] = distances[u] + weight
+                    prev[v] = u
                     heapq.heappush(pq, (distances[v], v))
                     steps.append(("update", v, f"Update {v} Distance: {distances[v]}", distances.copy()))
-                    
+        
+        # --- Reconstruct Shortest Path ---
+        if distances[end] != float('inf'):
+            path_nodes = []
+            cur = end
+            while cur is not None:
+                path_nodes.append(cur)
+                if cur == start:
+                    break
+                cur = prev[cur]
+            path_nodes.reverse()
+            
+            if path_nodes and path_nodes[0] == start:
+                for i in range(len(path_nodes) - 1):
+                    u = path_nodes[i]
+                    v = path_nodes[i + 1]
+                    steps.append((
+                        "edge",
+                        (u, v),
+                        f"Shortest Path Edge: {u}-{v}",
+                        distances.copy()
+                    ))
+                for n in path_nodes:
+                    steps.append((
+                        "node",
+                        n,
+                        f"On Shortest Path: {n}",
+                        distances.copy()
+                    ))
+        
         return steps, distances[end]
 
     def get_mst_steps(self, algo="kruskal"):
         steps = []
         if algo == "kruskal":
-            # Manual Kruskal for step visualization
             edges = sorted(self.G.edges(data=True), key=lambda x: x[2]['weight'])
             parent = {n: n for n in self.G.nodes()}
             def find(n):
-                if parent[n] != n: parent[n] = find(parent[n])
+                if parent[n] != n:
+                    parent[n] = find(parent[n])
                 return parent[n]
             def union(n1, n2):
                 root1, root2 = find(n1), find(n2)
-                if root1 != root2: parent[root1] = root2; return True
+                if root1 != root2:
+                    parent[root1] = root2
+                    return True
                 return False
             
             mst_weight = 0
@@ -175,32 +207,36 @@ class GraphAlgorithms:
                     steps.append(("skip", (u, v), f"Skipped {u}-{v} (Cycle detected)"))
             return steps, mst_weight
         else: 
-            # Simplified Prim
-            mst = nx.minimum_spanning_tree(self.G, algorithm="prim")
-            weight = mst.size(weight="weight")
-            for u, v, d in mst.edges(data=True):
-                steps.append(("add_edge", (u, v), f"MST Edge: {u}-{v}"))
-            return steps, weight
+            # Prim
+            if self.G.number_of_nodes() > 0:
+                mst = nx.minimum_spanning_tree(self.G, algorithm="prim")
+                weight = mst.size(weight="weight")
+                for u, v, d in mst.edges(data=True):
+                    steps.append(("add_edge", (u, v), f"MST Edge (Prim): {u}-{v} (W: {d.get('weight', '')})"))
+                    steps.append(("node", u, ""))
+                    steps.append(("node", v, ""))
+                return steps, weight
+            else:
+                return [], 0
 
 def convert_to_agraph(G, highlight_nodes=None, highlight_edges=None, current_node=None, pos_fixed=None):
-    if highlight_nodes is None: highlight_nodes = set()
-    if highlight_edges is None: highlight_edges = set()
+    if highlight_nodes is None:
+        highlight_nodes = set()
+    if highlight_edges is None:
+        highlight_edges = set()
 
     nodes = []
     edges = []
 
     for n in G.nodes():
-        # --- FEATURE: Label Inside Node ---
-        # shape='circle' ทำให้ตัวหนังสืออยู่ข้างใน
-        # ปรับสี: ถ้าเป็น Current Node (กำลังพิจารณา) -> สีส้ม, Visited -> เขียว
         color = "#FFFFFF" 
         font_color = "black"
         
         if n == current_node:
-            color = "#FFA500" # Orange
+            color = "#FFA500"  # Orange
             font_color = "white"
         elif n in highlight_nodes:
-            color = "#006400" # Dark Green
+            color = "#006400"  # Dark Green
             font_color = "white"
         
         x, y = 0, 0
@@ -210,7 +246,7 @@ def convert_to_agraph(G, highlight_nodes=None, highlight_edges=None, current_nod
         nodes.append(Node(
             id=n, 
             label=str(n), 
-            shape="circle", # <--- สำคัญ: ทำให้เป็นวงกลมและตัวหนังสืออยู่ข้างใน
+            shape="circle",
             size=25, 
             color=color,
             font={'color': font_color},
@@ -222,9 +258,8 @@ def convert_to_agraph(G, highlight_nodes=None, highlight_edges=None, current_nod
         edge_color = "#CCCCCC"
         width = 2
         
-        # Check undirected
         if (u, v) in highlight_edges or (v, u) in highlight_edges:
-            edge_color = "#228B22" # Green
+            edge_color = "#228B22"  # Green
             width = 4
             
         edges.append(Edge(
@@ -248,7 +283,7 @@ def main():
     if "graph_data" not in st.session_state:
         st.session_state["graph_data"] = {"nodes": [], "edges": [], "pos": None}
     if "step_idx" not in st.session_state:
-        st.session_state["step_idx"] = -1 # -1 means not started or finished
+        st.session_state["step_idx"] = -1
     if "algo_steps" not in st.session_state:
         st.session_state["algo_steps"] = []
     
@@ -270,7 +305,7 @@ def main():
             st.session_state["graph_data"] = {"nodes": [], "edges": [], "pos": None}
         st.rerun()
 
-    # Manual Edit (Sidebar is more reliable than Canvas click)
+    # Manual Edit
     with st.sidebar.expander("📝 Edit Graph (Add Node/Edge)"):
         c1, c2 = st.columns(2)
         new_n = c1.text_input("New Node Name")
@@ -286,9 +321,10 @@ def main():
         w = cc3.number_input("Weight", 1)
         if st.button("Add Edge"):
             if u and v:
-                # Add nodes if not exist
-                if u not in st.session_state["graph_data"]["nodes"]: st.session_state["graph_data"]["nodes"].append(u)
-                if v not in st.session_state["graph_data"]["nodes"]: st.session_state["graph_data"]["nodes"].append(v)
+                if u not in st.session_state["graph_data"]["nodes"]:
+                    st.session_state["graph_data"]["nodes"].append(u)
+                if v not in st.session_state["graph_data"]["nodes"]:
+                    st.session_state["graph_data"]["nodes"].append(v)
                 st.session_state["graph_data"]["edges"].append({"u": u, "v": v, "w": w})
                 st.rerun()
 
@@ -297,15 +333,20 @@ def main():
     
     # Construct Graph Object
     G = nx.Graph()
-    for n in st.session_state["graph_data"]["nodes"]: G.add_node(n)
-    for e in st.session_state["graph_data"]["edges"]: G.add_edge(e['u'], e['v'], weight=e['w'])
+    for n in st.session_state["graph_data"]["nodes"]:
+        G.add_node(n)
+    for e in st.session_state["graph_data"]["edges"]:
+        G.add_edge(e['u'], e['v'], weight=e['w'])
     
-    algo_choice = st.sidebar.selectbox("Algorithm", ["DFS", "BFS", "Dijkstra", "MST (Kruskal)"])
+    algo_choice = st.sidebar.selectbox(
+        "Algorithm",
+        ["DFS", "BFS", "Dijkstra", "MST (Kruskal)", "MST (Prim)"]
+    )
     
     start_node = None
     end_node = None
     if list(G.nodes()):
-        if algo_choice != "MST (Kruskal)":
+        if algo_choice not in ["MST (Kruskal)", "MST (Prim)"]:
             start_node = st.sidebar.selectbox("Start Node", list(G.nodes()))
         if algo_choice == "Dijkstra":
             end_node = st.sidebar.selectbox("End Node", list(G.nodes()), index=len(G.nodes())-1)
@@ -313,19 +354,24 @@ def main():
     if st.sidebar.button("Initialize Algorithm"):
         algo = GraphAlgorithms(G)
         steps = []
-        if algo_choice == "DFS": steps = algo.get_dfs_steps(start_node)
-        elif algo_choice == "BFS": steps = algo.get_bfs_steps(start_node)
-        elif algo_choice == "Dijkstra": steps, _ = algo.get_dijkstra_steps(start_node, end_node)
-        elif algo_choice == "MST (Kruskal)": steps, _ = algo.get_mst_steps("kruskal")
+        if algo_choice == "DFS" and start_node:
+            steps = algo.get_dfs_steps(start_node)
+        elif algo_choice == "BFS" and start_node:
+            steps = algo.get_bfs_steps(start_node)
+        elif algo_choice == "Dijkstra" and start_node and end_node:
+            steps, _ = algo.get_dijkstra_steps(start_node, end_node)
+        elif algo_choice == "MST (Kruskal)":
+            steps, _ = algo.get_mst_steps("kruskal")
+        elif algo_choice == "MST (Prim)":
+            steps, _ = algo.get_mst_steps("prim")
         
         st.session_state["algo_steps"] = steps
-        st.session_state["step_idx"] = 0 # Start at first step
+        st.session_state["step_idx"] = 0
         st.rerun()
 
     # --- Main Area ---
     col_vis, col_info = st.columns([3, 1])
     
-    # Logic to Determine Current Visualization State based on step_idx
     highlight_nodes = set()
     highlight_edges = set()
     current_node_vis = None
@@ -333,38 +379,30 @@ def main():
     distances_data = {}
     
     if st.session_state["step_idx"] >= 0 and st.session_state["algo_steps"]:
-        # Replay steps up to current index
         idx = st.session_state["step_idx"]
         current_step = st.session_state["algo_steps"][idx]
         
-        # Unpack step data
-        # Common formats: (type, val, msg) or (type, val, msg, dist_dict)
         s_type = current_step[0]
         val = current_step[1]
         log_msg = current_step[2] if len(current_step) > 2 else ""
         
-        # Dijkstra has distance dict at index 3
         if len(current_step) > 3:
             distances_data = current_step[3]
 
-        # Process History for Colors
         for i in range(idx + 1):
             s = st.session_state["algo_steps"][i]
-            if s[0] == "node" or s[0] == "update" or s[0] == "finished":
+            if s[0] in ["node", "update", "finished"]:
                 highlight_nodes.add(s[1])
-            elif s[0] == "edge" or s[0] == "add_edge":
+            elif s[0] in ["edge", "add_edge"]:
                 highlight_edges.add(s[1])
             elif s[0] == "current":
                 current_node_vis = s[1]
                 highlight_nodes.add(s[1])
             
-            # Special highlighting for current step action
-            if i == idx:
-                if s[0] == "check_edge":
-                    highlight_edges.add(s[1]) # Temporarily highlight edge being checked
+            if i == idx and s[0] == "check_edge":
+                highlight_edges.add(s[1])
     
     with col_vis:
-        # --- Controller Buttons ---
         b1, b2, b3 = st.columns([1, 1, 2])
         if b1.button("◀ Prev Step"):
             if st.session_state["step_idx"] > 0:
@@ -375,8 +413,12 @@ def main():
             if st.session_state["step_idx"] < len(st.session_state["algo_steps"]) - 1:
                 st.session_state["step_idx"] += 1
                 st.rerun()
+
+        if b3.button("Instant Skip ⏩"):
+            if st.session_state["algo_steps"]:
+                st.session_state["step_idx"] = len(st.session_state["algo_steps"]) - 1
+                st.rerun()
                 
-        # --- Graph Visualization ---
         nodes_data, edges_data = convert_to_agraph(
             G, 
             highlight_nodes=highlight_nodes,
@@ -399,21 +441,19 @@ def main():
     with col_info:
         st.subheader("🔍 Status Panel")
         
-        # 1. Log Box
         st.info(f"**Action:** {log_msg}")
         
-        # 2. Dijkstra Table
         if algo_choice == "Dijkstra" and distances_data:
             st.markdown("---")
             st.write("📊 **Distance Table**")
-            # Convert dict to clean dataframe
             df = pd.DataFrame(list(distances_data.items()), columns=["Node", "Dist"])
-            # Format infinity
-            df['Dist'] = df['Dist'].apply(lambda x: "∞" if x == float('inf') else x)
+            
+            # --- FIX: Ensure consistent type (string) for the column to avoid PyArrow errors ---
+            df['Dist'] = df['Dist'].apply(lambda x: "∞" if x == float('inf') else str(x))
+            
             df = df.sort_values(by="Node")
             st.dataframe(df, hide_index=True)
             
-        # 3. Legend
         st.markdown("---")
         st.caption("**Legend:**")
         st.markdown("⚪ White: Unvisited")
