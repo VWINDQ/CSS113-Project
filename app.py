@@ -9,7 +9,7 @@ SCALE = 200
 
 TESTCASES = {
     # ----------------------------------------------------
-    #(Dijkstra's Shortest Path)
+    # (Dijkstra's Shortest Path)
     # ----------------------------------------------------
     "Image Case 1: Start a to e": {
         "nodes": ["a", "b", "c", "d", "e"],
@@ -28,26 +28,16 @@ TESTCASES = {
     "Image Case 2: Start a to d": {
         "nodes": ["a", "b", "c", "d", "e"],
         "edges": [
-            # ข้อมูล Edges เดิมที่ถูกต้องแล้ว
             ("a", "b", 6), ("a", "c", 7), ("a", "e", 5),
             ("b", "c", 2),
             ("c", "e", 1), ("c", "d", 3),
             ("e", "d", 2)
         ],
         "pos": {
-            # b: ยอดพีระมิด (บนสุด -> Y ติดลบ)
             "b": (0, -2.5*SCALE),         
-            
-            # a: กลางซ้าย (ระดับสายตา)
             "a": (-2.5*SCALE, 0),         
-            
-            # c: กลางขวา (ระดับเดียวกับ a)
             "c": (2.5*SCALE, 0),          
-            
-            # e: ล่างซ้าย (Y เป็นบวก -> ลงล่าง)
             "e": (-1.5*SCALE, 2.5*SCALE),  
-            
-            # d: ล่างขวา (ระดับเดียวกับ e)
             "d": (1.5*SCALE, 2.5*SCALE)    
         }
     },
@@ -61,16 +51,12 @@ TESTCASES = {
             ("e", "f", 7)
         ],
         "pos": {
-            "a": (-3*SCALE, 0),           # a: ซ้ายสุด (กลาง)
-            
-            # --- แก้ใหม่: ใช้ค่าลบเพื่อให้ขึ้นข้างบน ---
-            "b": (-1*SCALE, -2*SCALE),    # b: บนซ้าย (ค่า Y ติดลบ = ขึ้นบน)
-            "c": (-1*SCALE, 2*SCALE),     # c: ล่างซ้าย (ค่า Y บวก = ลงล่าง)
-            
-            "d": (1*SCALE, -0.5*SCALE),   # d: กลางค่อนบน (ระดับเดียวกับ f)
-            
-            "f": (3*SCALE, -0.5*SCALE),   # f: ขวาบน (ระดับเดียวกับ d)
-            "e": (3*SCALE, 2*SCALE)       # e: ขวาล่าง (ระดับเดียวกับ c)
+            "a": (-3*SCALE, 0),           
+            "b": (-1*SCALE, -2*SCALE),    
+            "c": (-1*SCALE, 2*SCALE),     
+            "d": (1*SCALE, -0.5*SCALE),   
+            "f": (3*SCALE, -0.5*SCALE),   
+            "e": (3*SCALE, 2*SCALE)       
         }
     },
     "Testcase 4: Weighted Shortest Path": {
@@ -101,36 +87,7 @@ class GraphAlgorithms:
     def __init__(self, G):
         self.G = G
 
-    def get_dfs_steps(self, start_node):
-        steps = []
-        visited = set()
-        def dfs(u):
-            visited.add(u)
-            steps.append(("node", u))
-            for v in self.G.neighbors(u):
-                if v not in visited:
-                    steps.append(("edge", (u, v)))
-                    dfs(v)
-        dfs(start_node)
-        return steps
-
-    def get_bfs_steps(self, start_node):
-        steps = []
-        visited = set()
-        queue = [start_node]
-        visited.add(start_node)
-        steps.append(("node", start_node))
-        
-        while queue:
-            u = queue.pop(0)
-            for v in self.G.neighbors(u):
-                if v not in visited:
-                    visited.add(v)
-                    steps.append(("edge", (u, v)))
-                    steps.append(("node", v))
-                    queue.append(v)
-        return steps
-
+    # เหลือแค่ Dijkstra ตามที่ต้องการครับ
     def get_dijkstra_steps(self, start, end):
         try:
             path = nx.dijkstra_path(self.G, start, end, weight='weight')
@@ -145,25 +102,6 @@ class GraphAlgorithms:
         except Exception:
             return [], -1
 
-    def get_mst_steps(self, algo="kruskal"):
-        steps = []
-        # Create MST using NetworkX built-in functions
-        if algo == "kruskal":
-            mst = nx.minimum_spanning_tree(self.G, algorithm="kruskal")
-        else: # Prim
-            mst = nx.minimum_spanning_tree(self.G, algorithm="prim")
-            
-        weight = mst.size(weight="weight")
-        
-        # Extract edges and nodes to visualize
-        # Note: mst.edges(data=True) returns (u, v, data_dict)
-        for u, v, d in mst.edges(data=True):
-            steps.append(("edge", (u, v)))
-            steps.append(("node", u))
-            steps.append(("node", v))
-
-        return steps, weight
-
 def convert_to_agraph(G, highlight_nodes=None, path_edges=None, pos_fixed=None):
     if highlight_nodes is None: highlight_nodes = set()
     if path_edges is None: path_edges = set()
@@ -177,7 +115,7 @@ def convert_to_agraph(G, highlight_nodes=None, path_edges=None, pos_fixed=None):
         size = 25
         
         if n in highlight_nodes:
-            color = "#006400" # Dark Green (Visited)
+            color = "#006400" # Dark Green (Visited/Path)
             label_color = "white"
         
         x, y = 0, 0
@@ -220,17 +158,20 @@ def convert_to_agraph(G, highlight_nodes=None, path_edges=None, pos_fixed=None):
 # --------------------------
 
 def main():
-    st.set_page_config(page_title="Graph Algo Visualizer", layout="wide")
+    st.set_page_config(page_title="Dijkstra Visualizer", layout="wide")
     
     if "graph_data" not in st.session_state:
         st.session_state["graph_data"] = {"nodes": [], "edges": [], "pos": None}
     
-    st.title("Graph Algorithms Visualizer :blue[Instant Result]")
+    st.title("Dijkstra's Shortest Path Visualizer")
     st.markdown("""
     **Instructions:**
     1. Load a Testcase.
-    2. Select an algorithm and click 'Calculate Path'.
-    3. See the path text and the highlighted graph immediately.
+    2. Select Start/End Nodes.
+    3. Click 'Calculate Path' to see the shortest route 
+
+[Image of Breadth First Search diagram]
+.
     """)
 
     # --- Sidebar ---
@@ -272,70 +213,39 @@ def main():
     col_algo, col_graph = st.columns([1, 3])
 
     with col_algo:
-        st.subheader("Algorithms")
-        algo_choice = st.selectbox("Choose Algorithm", ["DFS", "BFS", "Dijkstra", "MST (Kruskal)", "MST (Prim)"])
+        st.subheader("Controls")
+        # ลบตัวเลือกอื่นออก เหลือแค่ Dijkstra
+        algo_choice = st.selectbox("Algorithm", ["Dijkstra"])
         
         start_node = None
         end_node = None
         
         nodes = list(G.nodes())
         if nodes:
-            if algo_choice in ["DFS", "BFS", "Dijkstra"]:
-                start_node = st.selectbox("Start Node", nodes)
-            if algo_choice == "Dijkstra":
-                end_node = st.selectbox("Target Node", nodes, index=len(nodes)-1)
+            start_node = st.selectbox("Start Node", nodes)
+            end_node = st.selectbox("Target Node", nodes, index=len(nodes)-1)
         
         run_btn = st.button("Calculate Path", type="primary")
 
     with col_graph:
         graph_placeholder = st.empty()
         
-        # Default State variables
         visited_nodes = set()
         visited_edges = set()
-        path_text = ""
         
         if run_btn and nodes:
             algo = GraphAlgorithms(G)
             steps = []
             
-            # --- Algorithm Logic ---
-            if algo_choice == "DFS":
-                steps = algo.get_dfs_steps(start_node)
-                # Filter just nodes for text display
-                path_sequence = [val for s_type, val in steps if s_type == 'node']
-                # Remove duplicates while preserving order
-                seen = set()
-                path_sequence = [x for x in path_sequence if not (x in seen or seen.add(x))]
-                path_text = " -> ".join(path_sequence)
-                st.info(f"**DFS Traversal Order:** {path_text}")
-
-            elif algo_choice == "BFS":
-                steps = algo.get_bfs_steps(start_node)
+            # --- Dijkstra Only ---
+            steps, dist = algo.get_dijkstra_steps(start_node, end_node)
+            if dist != -1: 
                 path_sequence = [val for s_type, val in steps if s_type == 'node']
                 path_text = " -> ".join(path_sequence)
-                st.info(f"**BFS Traversal Order:** {path_text}")
-
-            elif algo_choice == "Dijkstra":
-                steps, dist = algo.get_dijkstra_steps(start_node, end_node)
-                if dist != -1: 
-                    path_sequence = [val for s_type, val in steps if s_type == 'node']
-                    path_text = " -> ".join(path_sequence)
-                    st.success(f"**Shortest Path:** {path_text}")
-                    st.success(f"**Total Distance:** {dist}")
-                else:
-                    st.error("No path found.")
-
-            elif "MST" in algo_choice:
-                algo_type = "kruskal" if "Kruskal" in algo_choice else "prim"
-                steps, w = algo.get_mst_steps(algo_type)
-                st.success(f"**MST Total Weight:** {w}")
-                
-                # FIX: Unpack carefully using 'val' which can be either Node(string) or Edge(tuple)
-                # Only when s_type is 'edge', we assume val is (u, v) and format it.
-                edges_list = [f"({val[0]},{val[1]})" for s_type, val in steps if s_type == 'edge']
-                
-                st.info(f"**Edges in MST:** {', '.join(edges_list)}")
+                st.success(f"**Shortest Path:** {path_text}")
+                st.success(f"**Total Distance:** {dist}")
+            else:
+                st.error("No path found.")
 
             # --- Gather Visualization Data ---
             for s_type, val in steps:
@@ -344,7 +254,6 @@ def main():
                 elif s_type == "edge":
                     visited_edges.add(val)
 
-            # Generate Graph Data
             nodes_data, edges_data = convert_to_agraph(
                 G, 
                 highlight_nodes=visited_nodes, 
@@ -353,7 +262,6 @@ def main():
             )
 
         else:
-            # Idle State (No calculation yet)
             nodes_data, edges_data = convert_to_agraph(
                 G, 
                 pos_fixed=st.session_state["graph_data"]["pos"]
