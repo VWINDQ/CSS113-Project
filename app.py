@@ -142,9 +142,9 @@ TESTCASES = {
             ("e", "d", 2)
         ],
         "pos": {
-            "b": (0, -2.5*SCALE),         
-            "a": (-2.5*SCALE, 0),         
-            "c": (2.5*SCALE, 0),          
+            "b": (0, -2.5*SCALE),          
+            "a": (-2.5*SCALE, 0),          
+            "c": (2.5*SCALE, 0),           
             "e": (-1.5*SCALE, 2.5*SCALE),  
             "d": (1.5*SCALE, 2.5*SCALE)    
         }
@@ -159,12 +159,12 @@ TESTCASES = {
             ("e", "f", 7)
         ],
         "pos": {
-            "a": (-3*SCALE, 0),           
-            "b": (-1*SCALE, -2*SCALE),    
-            "c": (-1*SCALE, 2*SCALE),     
-            "d": (1*SCALE, -0.5*SCALE),   
-            "f": (3*SCALE, -0.5*SCALE),   
-            "e": (3*SCALE, 2*SCALE)       
+            "a": (-3*SCALE, 0),            
+            "b": (-1*SCALE, -2*SCALE),     
+            "c": (-1*SCALE, 2*SCALE),      
+            "d": (1*SCALE, -0.5*SCALE),    
+            "f": (3*SCALE, -0.5*SCALE),    
+            "e": (3*SCALE, 2*SCALE)        
         }
     },
     "Dijkstra: Weighted Shortest Path": {
@@ -197,9 +197,9 @@ TESTCASES = {
             ("g", "b", 3), ("g", "c", 4), ("g", "e", 3), ("g", "f", 5)
         ],
         "pos": {
-            "g": (0, 0),               # กลาง
-            "a": (-3*SCALE, 0),        # ซ้ายสุด
-            "d": (3*SCALE, 0),         # ขวาสุด
+            "g": (0, 0),                # กลาง
+            "a": (-3*SCALE, 0),         # ซ้ายสุด
+            "d": (3*SCALE, 0),          # ขวาสุด
             "b": (-1.5*SCALE, -2*SCALE), # บนซ้าย
             "c": (1.5*SCALE, -2*SCALE),  # บนขวา
             "f": (-1.5*SCALE, 2*SCALE),  # ล่างซ้าย
@@ -219,19 +219,19 @@ TESTCASES = {
         ],
         "pos": {
             # c: ยอดบนสุด (ในรูปเขียน b แต่แก้เป็น c)
-            "c": (0, -2.5*SCALE),          
+            "c": (0, -2.5*SCALE),           
             
             # b: ปีกซ้าย
             "b": (-2.5*SCALE, -0.8*SCALE), 
             
             # d: ปีกขวา
-            "d": (2.5*SCALE, -0.8*SCALE),  
+            "d": (2.5*SCALE, -0.8*SCALE),   
             
             # a: ล่างซ้าย
-            "a": (-1.5*SCALE, 2.5*SCALE),  
+            "a": (-1.5*SCALE, 2.5*SCALE),   
             
             # e: ล่างขวา
-            "e": (1.5*SCALE, 2.5*SCALE)    
+            "e": (1.5*SCALE, 2.5*SCALE)     
         }
     },
     "MST: Rectangle & Cross": {
@@ -249,7 +249,7 @@ TESTCASES = {
             ("d", "e", 1)
         ],
         "pos": {
-            "e": (0, 0),              # e: จุดกึ่งกลาง
+            "e": (0, 0),               # e: จุดกึ่งกลาง
             
             "a": (-2*SCALE, -1.5*SCALE), # a: บนซ้าย
             "b": (2*SCALE, -1.5*SCALE),  # b: บนขวา
@@ -343,8 +343,10 @@ class GraphAlgorithms:
     def get_dfs_steps(self, start_node):
         steps = []
         visited = set()
+        traversal_order = []
         def dfs(u):
             visited.add(u)
+            traversal_order.append(u)
             steps.append(("node", u, f"Visit Node {u}"))
             for v in self.G.neighbors(u):
                 if v not in visited:
@@ -352,24 +354,26 @@ class GraphAlgorithms:
                     dfs(v)
         if start_node:
             dfs(start_node)
-        return steps
+        return steps, traversal_order
 
     def get_bfs_steps(self, start_node):
         steps = []
         visited = set()
+        traversal_order = []
         queue = [start_node]
         visited.add(start_node)
         steps.append(("node", start_node, f"Start at {start_node}"))
         
         while queue:
             u = queue.pop(0)
+            traversal_order.append(u)
             for v in self.G.neighbors(u):
                 if v not in visited:
                     visited.add(v)
                     steps.append(("edge", (u, v), f"Discover Edge {u}-{v}"))
                     steps.append(("node", v, f"Visit Node {v}"))
                     queue.append(v)
-        return steps
+        return steps, traversal_order
 
     def get_dijkstra_steps(self, start, end):
         # Dijkstra implementation that logs steps for visualization
@@ -405,8 +409,8 @@ class GraphAlgorithms:
                     steps.append(("update", v, f"Update {v} Distance: {distances[v]}", distances.copy()))
         
         # --- Reconstruct Shortest Path ---
+        path_nodes = []
         if distances[end] != float('inf'):
-            path_nodes = []
             cur = end
             while cur is not None:
                 path_nodes.append(cur)
@@ -433,10 +437,11 @@ class GraphAlgorithms:
                         distances.copy()
                     ))
         
-        return steps, distances[end]
+        return steps, distances[end], path_nodes
 
     def get_mst_steps(self, algo="kruskal"):
         steps = []
+        mst_edges = []
         if algo == "kruskal":
             edges = sorted(self.G.edges(data=True), key=lambda x: x[2]['weight'])
             parent = {n: n for n in self.G.nodes()}
@@ -457,24 +462,26 @@ class GraphAlgorithms:
                 steps.append(("check_edge", (u, v), f"Checking Edge {u}-{v} (W: {w})"))
                 if union(u, v):
                     mst_weight += w
+                    mst_edges.append((u, v, w))
                     steps.append(("add_edge", (u, v), f"Added Edge {u}-{v} to MST"))
                     steps.append(("node", u, ""))
                     steps.append(("node", v, ""))
                 else:
                     steps.append(("skip", (u, v), f"Skipped {u}-{v} (Cycle detected)"))
-            return steps, mst_weight
+            return steps, mst_weight, mst_edges
         else: 
             # Prim
             if self.G.number_of_nodes() > 0:
                 mst = nx.minimum_spanning_tree(self.G, algorithm="prim")
                 weight = mst.size(weight="weight")
                 for u, v, d in mst.edges(data=True):
+                    mst_edges.append((u, v, d.get('weight', 0)))
                     steps.append(("add_edge", (u, v), f"MST Edge (Prim): {u}-{v} (W: {d.get('weight', '')})"))
                     steps.append(("node", u, ""))
                     steps.append(("node", v, ""))
-                return steps, weight
+                return steps, weight, mst_edges
             else:
-                return [], 0
+                return [], 0, []
 
 def convert_to_agraph(G, highlight_nodes=None, highlight_edges=None, current_node=None, pos_fixed=None):
     if highlight_nodes is None:
@@ -543,6 +550,8 @@ def main():
         st.session_state["step_idx"] = -1
     if "algo_steps" not in st.session_state:
         st.session_state["algo_steps"] = []
+    if "final_result" not in st.session_state:
+        st.session_state["final_result"] = ""
     
     st.title("Graph Algorithms: :orange[Step-by-Step Learning]")
 
@@ -553,6 +562,7 @@ def main():
     if st.sidebar.button("Reset / Load Graph"):
         st.session_state["step_idx"] = -1
         st.session_state["algo_steps"] = []
+        st.session_state["final_result"] = ""
         if selected_testcase != "Custom":
             tc = TESTCASES[selected_testcase]
             st.session_state["graph_data"]["nodes"] = tc["nodes"][:]
@@ -611,19 +621,36 @@ def main():
     if st.sidebar.button("Initialize Algorithm"):
         algo = GraphAlgorithms(G)
         steps = []
+        result_text = ""
+        
         if algo_choice == "DFS" and start_node:
-            steps = algo.get_dfs_steps(start_node)
+            steps, order = algo.get_dfs_steps(start_node)
+            result_text = f"**Traversal Order:**\n{' -> '.join(map(str, order))}"
+            
         elif algo_choice == "BFS" and start_node:
-            steps = algo.get_bfs_steps(start_node)
+            steps, order = algo.get_bfs_steps(start_node)
+            result_text = f"**Traversal Order:**\n{' -> '.join(map(str, order))}"
+            
         elif algo_choice == "Dijkstra" and start_node and end_node:
-            steps, _ = algo.get_dijkstra_steps(start_node, end_node)
+            steps, dist, path = algo.get_dijkstra_steps(start_node, end_node)
+            if dist == float('inf'):
+                result_text = f"**Target unreachable!** (Dist: ∞)"
+            else:
+                result_text = f"**Shortest Path:** {' -> '.join(map(str, path))}\n\n**Total Distance:** {dist}"
+                
         elif algo_choice == "MST (Kruskal)":
-            steps, _ = algo.get_mst_steps("kruskal")
+            steps, weight, mst_edges = algo.get_mst_steps("kruskal")
+            edge_str = ", ".join([f"({u}-{v})" for u, v, w in mst_edges])
+            result_text = f"**Total MST Weight:** {weight}\n\n**Edges:** {edge_str}"
+            
         elif algo_choice == "MST (Prim)":
-            steps, _ = algo.get_mst_steps("prim")
+            steps, weight, mst_edges = algo.get_mst_steps("prim")
+            edge_str = ", ".join([f"({u}-{v})" for u, v, w in mst_edges])
+            result_text = f"**Total MST Weight:** {weight}\n\n**Edges:** {edge_str}"
         
         st.session_state["algo_steps"] = steps
         st.session_state["step_idx"] = 0
+        st.session_state["final_result"] = result_text
         st.rerun()
 
     # --- Main Area ---
@@ -698,6 +725,11 @@ def main():
     with col_info:
         st.subheader("🔍 Status Panel")
         
+        # --- NEW: Display Final Result if available ---
+        if st.session_state["final_result"]:
+            st.success(st.session_state["final_result"])
+        # ----------------------------------------------
+
         st.info(f"**Action:** {log_msg}")
         
         if algo_choice == "Dijkstra" and distances_data:
