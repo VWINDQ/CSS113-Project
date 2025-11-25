@@ -341,38 +341,38 @@ class GraphAlgorithms:
         self.G = G
 
     def get_dfs_steps(self, start_node):
-        steps = []
-        visited = set()
-        traversal_order = []
-        def dfs(u):
-            visited.add(u)
-            traversal_order.append(u)
-            steps.append(("node", u, f"Visit Node {u}"))
-            for v in self.G.neighbors(u):
-                if v not in visited:
-                    steps.append(("edge", (u, v), f"Explore Edge {u}-{v}"))
-                    dfs(v)
-        if start_node:
+        steps = [] # 1. สร้างลิสต์ว่าง ไว้เก็บขั้นตอนการทำงาน (เพื่อเอาไปทำ Animation)
+        visited = set() # 2. สร้างเซต (Set) ไว้จดว่าโหนดไหน "ไปมาแล้ว" (ป้องกันการเดินวนเป็นวงกลม)
+        traversal_order = [] # 3. สร้างลิสต์ไว้เก็บลำดับโหนดที่ไปเยือนจริง ๆ (เพื่อสรุปผลตอนจบ)
+        def dfs(u): # 4. นิยามฟังก์ชันย่อยชื่อ dfs รับพารามิเตอร์ u (โหนดปัจจุบัน)
+            visited.add(u) # 5. ประทับตราว่า "ถึงโหนด u แล้วนะ" ลงในสมุดบันทึก visited
+            traversal_order.append(u) # 6. เพิ่ม u เข้าไปในลิสต์สรุปผล
+            steps.append(("node", u, f"Visit Node {u}")) # 7. บันทึก Step: บอกระบบกราฟว่า "ตอนนี้อยู่ที่โหนด u" (สีจะเปลี่ยน)
+            for v in self.G.neighbors(u): # 8. Loop เพื่อนบ้าน: วนลูปเช็กเพื่อนบ้าน (v) ทุกคนที่เชื่อมกับ u
+                if v not in visited: # 9. ถ้าเพื่อนคนนี้ (v) ยังไม่เคยไปหา (ไม่อยู่ใน visited)
+                    steps.append(("edge", (u, v), f"Explore Edge {u}-{v}")) # 10. บันทึก Step: บอกระบบกราฟว่า "กำลังจะวิ่งผ่านเส้น u->v" (เส้นจะไฮไลต์)
+                    dfs(v) # 11. ***สำคัญที่สุด*** เรียกฟังก์ชัน dfs(v) ซ้ำ! (กระโดดไปที่ v แล้วทำข้อ 4 ใหม่)
+        if start_node: # 12. เริ่มต้นกระบวนการทั้งหมด โดยเรียก dfs ใส่จุดเริ่มต้นเข้าไป
             dfs(start_node)
-        return steps, traversal_order
+        return steps, traversal_order # 13. ส่งคืนขั้นตอนทั้งหมด และลำดับการเดิน
 
     def get_bfs_steps(self, start_node):
         steps = []
         visited = set()
         traversal_order = []
-        queue = [start_node]
-        visited.add(start_node)
-        steps.append(("node", start_node, f"Start at {start_node}"))
+        queue = [start_node] # 4. ***หัวใจของ BFS*** สร้างคิว และใส่จุดเริ่มต้นเข้าไปเป็นคนแรก
+        visited.add(start_node) # 5. ประทับตราทันทีว่าจุดเริ่มต้น "จองแล้ว" (กันคนอื่นใส่ซ้ำเข้าคิว)
+        steps.append(("node", start_node, f"Start at {start_node}")) # 6. บันทึก Step แรก: เริ่มที่จุด start
         
-        while queue:
-            u = queue.pop(0)
-            traversal_order.append(u)
-            for v in self.G.neighbors(u):
-                if v not in visited:
-                    visited.add(v)
-                    steps.append(("edge", (u, v), f"Discover Edge {u}-{v}"))
-                    steps.append(("node", v, f"Visit Node {v}"))
-                    queue.append(v)
+        while queue: # 7. วนลูป "ตราบใดที่ในคิวยังมีโหนดเหลืออยู่" (ถ้าคิวว่างคือจบ)
+            u = queue.pop(0) # 8. ***สำคัญ*** ดึงโหนด "คนแรกสุด" ออกจากคิว (First-In, First-Out) มาเป็น u
+            traversal_order.append(u) # 9. บันทึกว่าเรา process โหนด u แล้ว
+            for v in self.G.neighbors(u): # 10. Loop เพื่อนบ้าน: ดูเพื่อน (v) ทุกคนของ u
+                if v not in visited: # 11. ถ้าเพื่อนคนนี้ (v) ยังไม่เคยถูกจอง (ไม่อยู่ใน visited)
+                    visited.add(v) # 12. รีบจองทันที! (Mark visited) เพื่อไม่ให้โหนดอื่นใส่ v เข้าคิวซ้ำ
+                    steps.append(("edge", (u, v), f"Discover Edge {u}-{v}")) # 13. บันทึก Step: โชว์เส้นเชื่อม u->v
+                    steps.append(("node", v, f"Visit Node {v}")) # 14. บันทึก Step: โชว์ว่าเจอโหนด v แล้ว
+                    queue.append(v) # 15. ***สำคัญ*** เอา v ไปต่อท้ายแถวในคิว (รอรอบถัดไป)
         return steps, traversal_order
 
     def get_dijkstra_steps(self, start, end):
