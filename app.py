@@ -439,9 +439,10 @@ class GraphAlgorithms:
         
         return steps, distances[end], path_nodes
 
-    def get_mst_steps(self, algo="kruskal"):
+    def get_mst_steps(self, algo="kruskal", start_node=None):
         steps = []
         mst_edges = []
+        
         if algo == "kruskal":
             edges = sorted(self.G.edges(data=True), key=lambda x: x[2]['weight'])
             parent = {n: n for n in self.G.nodes()}
@@ -469,19 +470,50 @@ class GraphAlgorithms:
                 else:
                     steps.append(("skip", (u, v), f"Skipped {u}-{v} (Cycle detected)"))
             return steps, mst_weight, mst_edges
-        else: 
-            # Prim
-            if self.G.number_of_nodes() > 0:
-                mst = nx.minimum_spanning_tree(self.G, algorithm="prim")
-                weight = mst.size(weight="weight")
-                for u, v, d in mst.edges(data=True):
-                    mst_edges.append((u, v, d.get('weight', 0)))
-                    steps.append(("add_edge", (u, v), f"MST Edge (Prim): {u}-{v} (W: {d.get('weight', '')})"))
-                    steps.append(("node", u, ""))
-                    steps.append(("node", v, ""))
-                return steps, weight, mst_edges
-            else:
-                return [], 0, []
+            
+        elif algo == "prim":
+            # Manual Prim Implementation for Step Visualization
+            if not start_node:
+                if self.G.number_of_nodes() > 0:
+                    start_node = list(self.G.nodes())[0]
+                else:
+                    return [], 0, []
+
+            visited = {start_node}
+            steps.append(("node", start_node, f"Start Prim at {start_node}"))
+            
+            # PQ stores (weight, u, v) where u is in MST, v is candidate
+            pq = []
+            for v in self.G.neighbors(start_node):
+                w = self.G[start_node][v]['weight']
+                heapq.heappush(pq, (w, start_node, v))
+                steps.append(("check_edge", (start_node, v), f"Add potential edge {start_node}-{v} (W: {w})"))
+            
+            mst_weight = 0
+            
+            while pq and len(visited) < self.G.number_of_nodes():
+                w, u, v = heapq.heappop(pq)
+                
+                if v in visited:
+                    # Edge goes to already visited node -> Skip (Cycle)
+                    continue
+                
+                # Add v to MST
+                visited.add(v)
+                mst_weight += w
+                mst_edges.append((u, v, w))
+                
+                steps.append(("add_edge", (u, v), f"Select Edge {u}-{v} (W: {w})"))
+                steps.append(("node", v, f"Visit Node {v}"))
+                
+                # Add neighbors of v to PQ
+                for neighbor in self.G.neighbors(v):
+                    if neighbor not in visited:
+                        new_w = self.G[v][neighbor]['weight']
+                        heapq.heappush(pq, (new_w, v, neighbor))
+                        steps.append(("check_edge", (v, neighbor), f"Add potential edge {v}-{neighbor} (W: {new_w})"))
+            
+            return steps, mst_weight, mst_edges
 
 def convert_to_agraph(G, highlight_nodes=None, highlight_edges=None, current_node=None, pos_fixed=None):
     if highlight_nodes is None:
@@ -613,7 +645,8 @@ def main():
     start_node = None
     end_node = None
     if list(G.nodes()):
-        if algo_choice not in ["MST (Kruskal)", "MST (Prim)"]:
+        # FIX: Allow start_node selection for Prim as well
+        if algo_choice != "MST (Kruskal)":
             start_node = st.sidebar.selectbox("Start Node", list(G.nodes()))
         if algo_choice == "Dijkstra":
             end_node = st.sidebar.selectbox("End Node", list(G.nodes()), index=len(G.nodes())-1)
@@ -644,7 +677,8 @@ def main():
             result_text = f"**Total MST Weight:** {weight}\n\n**Edges:** {edge_str}"
             
         elif algo_choice == "MST (Prim)":
-            steps, weight, mst_edges = algo.get_mst_steps("prim")
+            # FIX: Pass start_node to manual Prim
+            steps, weight, mst_edges = algo.get_mst_steps("prim", start_node=start_node)
             edge_str = ", ".join([f"({u}-{v})" for u, v, w in mst_edges])
             result_text = f"**Total MST Weight:** {weight}\n\n**Edges:** {edge_str}"
         
@@ -725,11 +759,10 @@ def main():
     with col_info:
         st.subheader("🔍 Status Panel")
         
-        # --- NEW: Display Final Result if available ---
+        # --- Display Final Result ---
         if st.session_state["final_result"]:
             st.success(st.session_state["final_result"])
-        # ----------------------------------------------
-
+        
         st.info(f"**Action:** {log_msg}")
         
         if algo_choice == "Dijkstra" and distances_data:
