@@ -491,26 +491,26 @@ class GraphAlgorithms:
             
             mst_weight = 0
             
-            while pq and len(visited) < self.G.number_of_nodes():
-                w, u, v = heapq.heappop(pq)
+            while pq and len(visited) < self.G.number_of_nodes(): #pq ไม่ว่าง และ ยังไม่ visit ครบทุกโหนด
+                w, u, v = heapq.heappop(pq) #ดึงเส้นเชือกที่มีน้ำหนักน้อยที่สุดออกมาจากคิว
                 
-                if v in visited:
+                if v in visited: #ดูว่าเคยลากไปยัง
                     # Edge goes to already visited node -> Skip (Cycle)
                     continue
                 
                 # Add v to MST
-                visited.add(v)
-                mst_weight += w
-                mst_edges.append((u, v, w))
+                visited.add(v) #เพิ่ม v ไป visited
+                mst_weight += w # บวกน้ำหนัก
+                mst_edges.append((u, v, w)) #เก็บเส้นเชือกไว้ในคำตอบ
                 
-                steps.append(("add_edge", (u, v), f"Select Edge {u}-{v} (W: {w})"))
+                steps.append(("add_edge", (u, v), f"Select Edge {u}-{v} (W: {w})")) #visual
                 steps.append(("node", v, f"Visit Node {v}"))
                 
                 # Add neighbors of v to PQ
-                for neighbor in self.G.neighbors(v):
-                    if neighbor not in visited:
+                for neighbor in self.G.neighbors(v): #วนลูปดูโหนดรอบๆโหนด v
+                    if neighbor not in visited: #เอาแค่โหนดที่ไม่ได้อยู๋ใน mst
                         new_w = self.G[v][neighbor]['weight']
-                        heapq.heappush(pq, (new_w, v, neighbor))
+                        heapq.heappush(pq, (new_w, v, neighbor)) # เพิ่มเส้นใหม่ไปในคิว
                         steps.append(("check_edge", (v, neighbor), f"Add potential edge {v}-{neighbor} (W: {new_w})"))
             
             return steps, mst_weight, mst_edges
