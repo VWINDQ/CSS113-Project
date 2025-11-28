@@ -1,4 +1,4 @@
-```markdown
+
 # Interactive Graph Algorithms Visualizer  
 ### เว็บสำหรับเรียนรู้อัลกอริทึมกราฟแบบ Step-by-Step ด้วย Streamlit
 
@@ -102,14 +102,11 @@
 
 ---
 
-## ภาพรวมโค้ดในไฟล์นี้
-
-```
-
-main.py                 # ไฟล์ Streamlit app หลัก (ตามที่ให้มา)
+main.py                 # ไฟล์ Streamlit app หลัก
 README.md               # ไฟล์อธิบายโปรเจกต์
 
-````
+## ภาพรวมโค้ดในไฟล์นี้
+
 
 ใน `main.py` ส่วนสำคัญ ๆ ได้แก่:
 
@@ -175,7 +172,7 @@ README.md               # ไฟล์อธิบายโปรเจกต์
 
 ```bash
 pip install streamlit networkx pandas streamlit-agraph
-````
+```
 
 ### 2. รันแอป
 
@@ -185,60 +182,40 @@ pip install streamlit networkx pandas streamlit-agraph
 streamlit run main.py
 ```
 
-เปิดเว็บเบราว์เซอร์ที่ลิงก์ที่ Streamlit แสดง (เช่น [http://localhost:8501](http://localhost:8501))
-
----
+เปิดเว็บเบราว์เซอร์ที่ลิงก์ที่ Streamlit แสดง (เช่น http://localhost:8501)
 
 ## วิธีใช้งานในหน้าเว็บ
 
 1. ไปที่ Sidebar:
-
-   * เลือกกราฟจากเมนู **Load Testcase** หรือเลือก "Custom" เพื่อสร้างเอง
-   * กดปุ่ม **Reset / Load Graph** เพื่อโหลดกราฟ
-
+    - เลือกกราฟจากเมนู **Load Testcase** หรือเลือก "Custom" เพื่อสร้างเอง
+    - กดปุ่ม **Reset / Load Graph** เพื่อโหลดกราฟ
 2. ถ้าต้องการแก้กราฟเอง:
-
-   * ใช้ส่วน "Edit Graph (Add Node/Edge)"
-   * ใส่ชื่อโหนดใหม่แล้วกด Add Node
-   * ใส่ From / To / Weight แล้วกด Add Edge
-
+    - ใช้ส่วน "Edit Graph (Add Node/Edge)"
+    - ใส่ชื่อโหนดใหม่แล้วกด Add Node
+    - ใส่ From / To / Weight แล้วกด Add Edge
 3. เลือกอัลกอริทึมจากเมนู:
-
-   * DFS
-   * BFS
-   * Dijkstra
-   * MST (Kruskal)
-   * MST (Prim)
-
+    - DFS
+    - BFS
+    - Dijkstra
+    - MST (Kruskal)
+    - MST (Prim)
 4. เลือกจุดเริ่มต้น (Start Node) และปลายทาง (End Node) หากอัลกอริทึมต้องใช้
-
 5. กด **Initialize Algorithm**
-
 6. ใช้ปุ่ม:
-
-   * ◀ Prev Step
-   * Next Step ▶
-   * Instant Skip ⏩
-     เพื่อไล่ดูการทำงานทีละขั้นหรือข้ามไปดูผลลัพธ์เลย
+    - ◀ Prev Step
+    - Next Step ▶
+    - Instant Skip ⏩
+        
+        เพื่อไล่ดูการทำงานทีละขั้นหรือข้ามไปดูผลลัพธ์เลย
+        
 
 ---
 
 ## จุดเด่นของโปรเจกต์นี้
 
-* เน้นการเรียนรู้ “ทีละขั้นตอน” (Step-by-step) ไม่ใช่แค่เห็นผลลัพธ์สุดท้าย
-* โค้ดอ่านง่าย แยกส่วนชัดเจน เหมาะสำหรับใช้เป็นตัวอย่างประกอบการสอนในห้องเรียน
-* ผู้ใช้สามารถทดลองเปลี่ยนกราฟเองได้ ทำให้เข้าใจพฤติกรรมของอัลกอริทึมในกรณีต่าง ๆ
-* รองรับทั้ง DFS, BFS, Dijkstra และ MST (Kruskal + Prim) ในระบบเดียว
-
----
-
-## License
-
-โค้ดสามารถนำไปใช้ ปรับปรุง และต่อยอดเพื่อการเรียนการสอนได้อย่างอิสระ
-(หากเผยแพร่สาธารณะ แนะนำให้ระบุเป็น MIT License หรือ License ที่ต้องการในโปรเจกต์จริง)
-
-```
-MIT License (แนะนำให้ใส่ไฟล์ LICENSE เพิ่มหากใช้ใน GitHub สาธารณะ)
-```
+- เน้นการเรียนรู้ “ทีละขั้นตอน” (Step-by-step) ไม่ใช่แค่เห็นผลลัพธ์สุดท้าย
+- โค้ดอ่านง่าย แยกส่วนชัดเจน เหมาะสำหรับใช้เป็นตัวอย่างประกอบการสอนในห้องเรียน
+- ผู้ใช้สามารถทดลองเปลี่ยนกราฟเองได้ ทำให้เข้าใจพฤติกรรมของอัลกอริทึมในกรณีต่าง ๆ
+- รองรับทั้ง DFS, BFS, Dijkstra และ MST (Kruskal + Prim) ในระบบเดียว
 
 ---
