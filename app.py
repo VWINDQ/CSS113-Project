@@ -341,38 +341,38 @@ class GraphAlgorithms:
         self.G = G
 
     def get_dfs_steps(self, start_node):
-        steps = [] # 1. สร้างลิสต์ว่าง ไว้เก็บขั้นตอนการทำงาน (เพื่อเอาไปทำ Animation)
-        visited = set() # 2. สร้างเซต (Set) ไว้จดว่าโหนดไหน "ไปมาแล้ว" (ป้องกันการเดินวนเป็นวงกลม)
-        traversal_order = [] # 3. สร้างลิสต์ไว้เก็บลำดับโหนดที่ไปเยือนจริง ๆ (เพื่อสรุปผลตอนจบ)
-        def dfs(u): # 4. นิยามฟังก์ชันย่อยชื่อ dfs รับพารามิเตอร์ u (โหนดปัจจุบัน)
-            visited.add(u) # 5. ประทับตราว่า "ถึงโหนด u แล้วนะ" ลงในสมุดบันทึก visited
-            traversal_order.append(u) # 6. เพิ่ม u เข้าไปในลิสต์สรุปผล
-            steps.append(("node", u, f"Visit Node {u}")) # 7. บันทึก Step: บอกระบบกราฟว่า "ตอนนี้อยู่ที่โหนด u" (สีจะเปลี่ยน)
-            for v in self.G.neighbors(u): # 8. Loop เพื่อนบ้าน: วนลูปเช็กเพื่อนบ้าน (v) ทุกคนที่เชื่อมกับ u
-                if v not in visited: # 9. ถ้าเพื่อนคนนี้ (v) ยังไม่เคยไปหา (ไม่อยู่ใน visited)
-                    steps.append(("edge", (u, v), f"Explore Edge {u}-{v}")) # 10. บันทึก Step: บอกระบบกราฟว่า "กำลังจะวิ่งผ่านเส้น u->v" (เส้นจะไฮไลต์)
-                    dfs(v) # 11. ***สำคัญที่สุด*** เรียกฟังก์ชัน dfs(v) ซ้ำ! (กระโดดไปที่ v แล้วทำข้อ 4 ใหม่)
-        if start_node: # 12. เริ่มต้นกระบวนการทั้งหมด โดยเรียก dfs ใส่จุดเริ่มต้นเข้าไป
+        steps = []
+        visited = set()
+        traversal_order = [] 
+        def dfs(u):
+            visited.add(u) #  ประทับตราว่า "ถึงโหนด u แล้วนะ" ลงในสมุดบันทึก visited
+            traversal_order.append(u) #  เพิ่ม u เข้าไปในลิสต์สรุปผล
+            steps.append(("node", u, f"Visit Node {u}")) 
+            for v in self.G.neighbors(u): #  Loop เพื่อนบ้าน: วนลูปเช็กเพื่อนบ้าน (v) ทุกคนที่เชื่อมกับ u
+                if v not in visited: #  ถ้าเพื่อนคนนี้ (v) ยังไม่เคยไปหา (ไม่อยู่ใน visited)
+                    steps.append(("edge", (u, v), f"Explore Edge {u}-{v}")) #  บันทึก Step: บอกระบบกราฟว่า "กำลังจะวิ่งผ่านเส้น u->v" (เส้นจะไฮไลต์)
+                    dfs(v) # เรียกฟังก์ชัน dfs(v) ซ้ำ! (กระโดดไปที่ v แล้วทำข้อ 4 ใหม่)
+        if start_node: #  เริ่มต้นกระบวนการทั้งหมด โดยเรียก dfs ใส่จุดเริ่มต้นเข้าไป
             dfs(start_node)
-        return steps, traversal_order # 13. ส่งคืนขั้นตอนทั้งหมด และลำดับการเดิน
+        return steps, traversal_order 
 
     def get_bfs_steps(self, start_node):
         steps = []
         visited = set()
         traversal_order = []
-        queue = [start_node] # 4. ***หัวใจของ BFS*** สร้างคิว และใส่จุดเริ่มต้นเข้าไปเป็นคนแรก
-        visited.add(start_node) # 5. ประทับตราทันทีว่าจุดเริ่มต้น "จองแล้ว" (กันคนอื่นใส่ซ้ำเข้าคิว)
-        steps.append(("node", start_node, f"Start at {start_node}")) # 6. บันทึก Step แรก: เริ่มที่จุด start
+        queue = [start_node] #สร้างคิว และใส่จุดเริ่มต้นเข้าไปเป็นคนแรก
+        visited.add(start_node) # ประทับตราทันทีว่าจุดเริ่มต้น "จองแล้ว" (กันคนอื่นใส่ซ้ำเข้าคิว)
+        steps.append(("node", start_node, f"Start at {start_node}")) 
         
-        while queue: # 7. วนลูป "ตราบใดที่ในคิวยังมีโหนดเหลืออยู่" (ถ้าคิวว่างคือจบ)
-            u = queue.pop(0) # 8. ***สำคัญ*** ดึงโหนด "คนแรกสุด" ออกจากคิว (First-In, First-Out) มาเป็น u
-            traversal_order.append(u) # 9. บันทึกว่าเรา process โหนด u แล้ว
-            for v in self.G.neighbors(u): # 10. Loop เพื่อนบ้าน: ดูเพื่อน (v) ทุกคนของ u
-                if v not in visited: # 11. ถ้าเพื่อนคนนี้ (v) ยังไม่เคยถูกจอง (ไม่อยู่ใน visited)
-                    visited.add(v) # 12. รีบจองทันที! (Mark visited) เพื่อไม่ให้โหนดอื่นใส่ v เข้าคิวซ้ำ
-                    steps.append(("edge", (u, v), f"Discover Edge {u}-{v}")) # 13. บันทึก Step: โชว์เส้นเชื่อม u->v
-                    steps.append(("node", v, f"Visit Node {v}")) # 14. บันทึก Step: โชว์ว่าเจอโหนด v แล้ว
-                    queue.append(v) # 15. ***สำคัญ*** เอา v ไปต่อท้ายแถวในคิว (รอรอบถัดไป)
+        while queue: #วนลูป "ตราบใดที่ในคิวยังมีโหนดเหลืออยู่" (ถ้าคิวว่างคือจบ)
+            u = queue.pop(0) #  ดึงโหนด "คนแรกสุด" ออกจากคิว (First-In, First-Out) มาเป็น u
+            traversal_order.append(u) #  บันทึกว่าเรา process โหนด u แล้ว
+            for v in self.G.neighbors(u): # Loop เพื่อนบ้าน: ดูเพื่อน (v) ทุกคนของ u
+                if v not in visited: #  ถ้าเพื่อนคนนี้ (v) ยังไม่เคยถูกจอง (ไม่อยู่ใน visited)
+                    visited.add(v) # (Mark visited) เพื่อไม่ให้โหนดอื่นใส่ v เข้าคิวซ้ำ
+                    steps.append(("edge", (u, v), f"Discover Edge {u}-{v}")) 
+                    steps.append(("node", v, f"Visit Node {v}")) 
+                    queue.append(v) # 15. เอา v ไปต่อท้ายแถวในคิว (รอรอบถัดไป)
         return steps, traversal_order
 
     def get_dijkstra_steps(self, start, end):
@@ -444,50 +444,50 @@ class GraphAlgorithms:
         mst_edges = []
         
         if algo == "kruskal":
-            edges = sorted(self.G.edges(data=True), key=lambda x: x[2]['weight'])
-            parent = {n: n for n in self.G.nodes()}
-            def find(n):
-                if parent[n] != n:
-                    parent[n] = find(parent[n])
-                return parent[n]
-            def union(n1, n2):
+            edges = sorted(self.G.edges(data=True), key=lambda x: x[2]['weight']) #นำทุกเส้นมาเรียงจากน้อยไปมาก
+            parent = {n: n for n in self.G.nodes()} #การกำหนดค่าเริ่มต้นให้แต่ละโหนดเป็นเซตอิสระ
+            def find(n): #หาว่าอยู่กลุ่มไหน
+                if parent[n] != n: #ถ้าชื่อรากไม่ใช่ชื่อตัวเองตัวแสดงว่าเคยถูกเชื่อมแล้ว
+                    parent[n] = find(parent[n]) #หาตัวราก
+                return parent[n] #ส่งค่ารากหรือตัวแรกกลับ
+            def union(n1, n2):  
                 root1, root2 = find(n1), find(n2)
-                if root1 != root2:
+                if root1 != root2: #ถ้ารากของ n1 กับ n2 ไม่เหมือนกันเชื่อมกันได้
                     parent[root1] = root2
                     return True
-                return False
+                return False 
             
             mst_weight = 0
             for u, v, d in edges:
                 w = d['weight']
-                steps.append(("check_edge", (u, v), f"Checking Edge {u}-{v} (W: {w})"))
+                steps.append(("check_edge", (u, v), f"Checking Edge {u}-{v} (W: {w})")) ##visual
                 if union(u, v):
-                    mst_weight += w
-                    mst_edges.append((u, v, w))
-                    steps.append(("add_edge", (u, v), f"Added Edge {u}-{v} to MST"))
+                    mst_weight += w #บวกน้ำหนัก
+                    mst_edges.append((u, v, w)) #เส้นที่ถูกเลือกจริง
+                    steps.append(("add_edge", (u, v), f"Added Edge {u}-{v} to MST")) #visual
                     steps.append(("node", u, ""))
                     steps.append(("node", v, ""))
                 else:
-                    steps.append(("skip", (u, v), f"Skipped {u}-{v} (Cycle detected)"))
+                    steps.append(("skip", (u, v), f"Skipped {u}-{v} (Cycle detected)")) #visual
             return steps, mst_weight, mst_edges
             
         elif algo == "prim":
             # Manual Prim Implementation for Step Visualization
-            if not start_node:
+            if not start_node: #ถ้าไม่ได้เลือกโหนด strat ให้เลือกตัวแรก
                 if self.G.number_of_nodes() > 0:
                     start_node = list(self.G.nodes())[0]
                 else:
                     return [], 0, []
 
-            visited = {start_node}
-            steps.append(("node", start_node, f"Start Prim at {start_node}"))
+            visited = {start_node} #เอาstart โหนดเข้า visted 
+            steps.append(("node", start_node, f"Start Prim at {start_node}")) # visual
             
             # PQ stores (weight, u, v) where u is in MST, v is candidate
-            pq = []
-            for v in self.G.neighbors(start_node):
-                w = self.G[start_node][v]['weight']
-                heapq.heappush(pq, (w, start_node, v))
-                steps.append(("check_edge", (start_node, v), f"Add potential edge {start_node}-{v} (W: {w})"))
+            pq = [] #เก็บเส้นที่รอดำเนินการ
+            for v in self.G.neighbors(start_node): #วนลูปดูโหนดที่เชื่อมกับ startโหนด
+                w = self.G[start_node][v]['weight'] #ดึงค่าน้ำหนัดที่เส้นเชื่อมนั้น
+                heapq.heappush(pq, (w, start_node, v))#เอาเข้า pq เรียงโดยดุจาก w ที่น้อยที่สุด
+                steps.append(("check_edge", (start_node, v), f"Add potential edge {start_node}-{v} (W: {w})")) #บันทึกประวัติการเพิ่มเส้นเชื่อมทางเลือก visual
             
             mst_weight = 0
             
